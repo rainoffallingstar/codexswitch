@@ -8,7 +8,8 @@
 - Edit existing provider configs (`edit`)
 - Remove provider configs (`remove`)
 - List all configured providers (`list`)
-- Interactive switch for active provider (default command)
+- Switch active provider from CLI (`switch --slug`) or interactive menu (default command)
+- Configurable `reasoning-effort` (`none|minimal|low|medium|high|xhigh`, default `medium`)
 
 Provider files are stored in `~/.codexswitch/<slug>/`, and activation copies files to `~/.codex/`.
 
@@ -26,6 +27,18 @@ go build -o codexswitch .
 CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o codexswitch-static .
 ```
 
+## Release
+
+Run the `Release` workflow manually (`workflow_dispatch`) in GitHub Actions.
+The workflow builds static binaries for Linux, macOS, and Windows, then publishes them to a GitHub Release.
+The release tag is automatically set to the current UTC date (format: `YYYY-MM-DD`).
+
+Release assets include:
+- `codexswitch-linux-amd64`
+- `codexswitch-macos-amd64`
+- `codexswitch-windows-amd64.exe`
+- `SHA256SUMS`
+
 ## Usage
 
 ### Add provider
@@ -37,10 +50,11 @@ codexswitch add \
   --api-key sk-xxx \
   --model gpt-4.1 \
   --base-url https://api.openai.com/v1 \
-  --wire-api responses
+  --wire-api responses \
+  --reasoning-effort medium
 ```
 
-If flags are missing in a TTY, prompts will ask for missing fields.
+If flags are missing in a TTY, prompts will ask for missing fields (including `reasoning-effort`).
 
 ### List providers
 
@@ -52,12 +66,16 @@ codexswitch list
 
 ```bash
 codexswitch
+codexswitch switch --slug openai
 ```
+
+`codexswitch switch` also supports interactive provider selection in a TTY.
 
 ### Edit provider
 
 ```bash
 codexswitch edit --slug openai --model gpt-4.1-mini
+codexswitch edit --slug openai --reasoning-effort high
 ```
 
 Without `--slug` in interactive mode, you can select a provider from a menu.
@@ -81,6 +99,8 @@ Show help:
 
 ```bash
 codexswitch --help
+codexswitch switch --help
+codexswitch add --help
 codexswitch edit --help
 codexswitch remove --help
 ```

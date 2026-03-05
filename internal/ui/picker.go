@@ -60,6 +60,7 @@ func PromptAddProvider(seed types.AddProviderInput, interactive bool) (types.Add
 		{label: "Model", value: &input.Model, required: true},
 		{label: "Base URL", value: &input.BaseURL, required: true},
 		{label: "Wire API", value: &input.WireAPI, required: false, dflt: "responses"},
+		{label: "Reasoning effort", value: &input.ReasoningEffort, required: false, dflt: types.DefaultReasoningEffort},
 	}
 
 	for _, f := range fields {
@@ -101,6 +102,11 @@ func PromptAddProvider(seed types.AddProviderInput, interactive bool) (types.Add
 	if input.WireAPI == "" {
 		input.WireAPI = "responses"
 	}
+	reasoningEffort, err := types.NormalizeReasoningEffort(input.ReasoningEffort)
+	if err != nil {
+		return types.AddProviderInput{}, err
+	}
+	input.ReasoningEffort = reasoningEffort
 
 	return input, nil
 }
@@ -178,9 +184,32 @@ func PromptEditProvider(seed types.Provider, opts types.AddProviderInput, intera
 		}
 	}
 
+	trimmedReasoningEffort := strings.TrimSpace(opts.ReasoningEffort)
+	if trimmedReasoningEffort != "" {
+		out.ReasoningEffort = trimmedReasoningEffort
+	} else if interactive {
+		reasoningDefault := out.ReasoningEffort
+		if reasoningDefault == "" {
+			reasoningDefault = types.DefaultReasoningEffort
+		}
+		val, err := runPrompt("Reasoning effort", reasoningDefault, 0)
+		if err != nil {
+			return types.Provider{}, err
+		}
+		if val != "" {
+			out.ReasoningEffort = val
+		}
+	}
+
 	if out.WireAPI == "" {
 		out.WireAPI = "responses"
 	}
+	reasoningEffort, err := types.NormalizeReasoningEffort(out.ReasoningEffort)
+	if err != nil {
+		return types.Provider{}, err
+	}
+	out.ReasoningEffort = reasoningEffort
+
 	return out, nil
 }
 

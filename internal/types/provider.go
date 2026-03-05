@@ -2,12 +2,13 @@ package types
 
 // Provider holds all configuration for a single Codex provider.
 type Provider struct {
-	Slug        string // folder name + config.toml provider key
-	DisplayName string
-	APIKey      string
-	Model       string
-	BaseURL     string
-	WireAPI     string // default "responses"
+	Slug            string // folder name + config.toml provider key
+	DisplayName     string
+	APIKey          string
+	Model           string
+	BaseURL         string
+	WireAPI         string // default "responses"
+	ReasoningEffort string // default "medium"
 }
 
 // ProviderList is the full registry of configured providers.
@@ -32,17 +33,19 @@ type ModelProviderConfig struct {
 
 // TOMLConfig maps to config.toml
 type TOMLConfig struct {
-	Model          string                         `toml:"model"`
-	ModelProvider  string                         `toml:"model_provider"`
-	ModelProviders map[string]ModelProviderConfig `toml:"model_providers"`
+	Model                string                         `toml:"model"`
+	ModelProvider        string                         `toml:"model_provider"`
+	ModelReasoningEffort string                         `toml:"model_reasoning_effort"`
+	ModelProviders       map[string]ModelProviderConfig `toml:"model_providers"`
 }
 
 // AddProviderInput carries the interactive prompts result for the add command.
 type AddProviderInput struct {
-	Slug        string
-	DisplayName string
-	APIKey      string
-	Model       string
-	BaseURL     string
-	WireAPI     string
+	Slug            string
+	DisplayName     string
+	APIKey          string
+	Model           string
+	BaseURL         string
+	WireAPI         string
+	ReasoningEffort string
 }

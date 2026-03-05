@@ -25,6 +25,7 @@ func init() {
 	addCmd.Flags().StringVar(&addOpts.Model, "model", "", "Default model")
 	addCmd.Flags().StringVar(&addOpts.BaseURL, "base-url", "", "Provider base URL")
 	addCmd.Flags().StringVar(&addOpts.WireAPI, "wire-api", "", "Wire API (default: responses)")
+	addCmd.Flags().StringVar(&addOpts.ReasoningEffort, "reasoning-effort", "", "Reasoning effort (none|minimal|low|medium|high|xhigh, default: medium)")
 
 	rootCmd.AddCommand(addCmd)
 }
@@ -43,12 +44,13 @@ func runAdd(_ *cobra.Command, _ []string) error {
 	}
 
 	p := types.Provider{
-		Slug:        input.Slug,
-		DisplayName: input.DisplayName,
-		APIKey:      input.APIKey,
-		Model:       input.Model,
-		BaseURL:     input.BaseURL,
-		WireAPI:     wireAPI,
+		Slug:            input.Slug,
+		DisplayName:     input.DisplayName,
+		APIKey:          input.APIKey,
+		Model:           input.Model,
+		BaseURL:         input.BaseURL,
+		WireAPI:         wireAPI,
+		ReasoningEffort: input.ReasoningEffort,
 	}
 
 	if err := store.SaveProvider(p); err != nil {

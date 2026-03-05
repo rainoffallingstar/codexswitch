@@ -27,6 +27,7 @@ func init() {
 	editCmd.Flags().StringVar(&editOpts.Model, "model", "", "Default model")
 	editCmd.Flags().StringVar(&editOpts.BaseURL, "base-url", "", "Provider base URL")
 	editCmd.Flags().StringVar(&editOpts.WireAPI, "wire-api", "", "Wire API")
+	editCmd.Flags().StringVar(&editOpts.ReasoningEffort, "reasoning-effort", "", "Reasoning effort (none|minimal|low|medium|high|xhigh)")
 
 	rootCmd.AddCommand(editCmd)
 }

@@ -115,10 +115,11 @@ func loadProvider(base, slug string) (types.Provider, error) {
 	}
 
 	p := types.Provider{
-		Slug:        slug,
-		DisplayName: slug,
-		APIKey:      auth.OpenAIAPIKey,
-		WireAPI:     "responses",
+		Slug:            slug,
+		DisplayName:     slug,
+		APIKey:          auth.OpenAIAPIKey,
+		WireAPI:         "responses",
+		ReasoningEffort: types.DefaultReasoningEffort,
 	}
 
 	tomlData, err := os.ReadFile(filepath.Join(dir, "config.toml"))
@@ -129,6 +130,7 @@ func loadProvider(base, slug string) (types.Provider, error) {
 			p.Model = tomlProvider.Model
 			p.BaseURL = tomlProvider.BaseURL
 			p.WireAPI = tomlProvider.WireAPI
+			p.ReasoningEffort = tomlProvider.ReasoningEffort
 		}
 	}
 

@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.tag.outputs.release_tag }}
+    steps:
+      - name: Generate date tag (UTC)
+        id: tag
+        run: echo "release_tag=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+
+  build-and-release:
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    env:
+      GO_VERSION: "1.21.x"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            artifact_name: codexswitch-linux-amd64
+          - goos: darwin
+            goarch: amd64
+            artifact_name: codexswitch-macos-amd64
+          - goos: windows
+            goarch: amd64
+            artifact_name: codexswitch-windows-amd64.exe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build static binary
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags='-s -w' -o "dist/${{ matrix.artifact_name }}" .
+
+      - name: Upload per-platform artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/${{ matrix.artifact_name }}
+          if-no-files-found: error
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare-release
+      - build-and-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Flatten artifact directories
+        run: |
+          mkdir -p release
+          find dist -type f -maxdepth 2 -exec cp {} release/ \;
+
+      - name: Generate checksums
+        run: |
+          cd release
+          sha256sum codexswitch-* > SHA256SUMS
+
+      - name: Create or update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare-release.outputs.release_tag }}
+          name: Release ${{ needs.prepare-release.outputs.release_tag }}
+          target_commitish: ${{ github.sha }}
+          files: |
+            release/codexswitch-linux-amd64
+            release/codexswitch-macos-amd64
+            release/codexswitch-windows-amd64.exe
+            release/SHA256SUMS

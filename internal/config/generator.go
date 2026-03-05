@@ -11,7 +11,7 @@ import (
 // GenerateAuthJSON returns the JSON bytes for auth.json.
 func GenerateAuthJSON(p types.Provider) ([]byte, error) {
 	auth := types.AuthConfig{
-		AuthMode:     "openai",
+		AuthMode:     "apikey",
 		OpenAIAPIKey: p.APIKey,
 	}
 	return json.MarshalIndent(auth, "", "  ")
@@ -23,10 +23,15 @@ func GenerateTOML(p types.Provider) ([]byte, error) {
 	if wireAPI == "" {
 		wireAPI = "responses"
 	}
+	reasoningEffort, err := types.NormalizeReasoningEffort(p.ReasoningEffort)
+	if err != nil {
+		reasoningEffort = types.DefaultReasoningEffort
+	}
 
 	cfg := types.TOMLConfig{
-		Model:         p.Model,
-		ModelProvider: p.Slug,
+		Model:                p.Model,
+		ModelProvider:        p.Slug,
+		ModelReasoningEffort: reasoningEffort,
 		ModelProviders: map[string]types.ModelProviderConfig{
 			p.Slug: {
 				Name:               p.DisplayName,
@@ -71,12 +76,17 @@ func ParseTOML(data []byte, slug string) (types.Provider, error) {
 	if wireAPI == "" {
 		wireAPI = "responses"
 	}
+	reasoningEffort, err := types.NormalizeReasoningEffort(cfg.ModelReasoningEffort)
+	if err != nil {
+		reasoningEffort = types.DefaultReasoningEffort
+	}
 
 	return types.Provider{
-		Slug:        slug,
-		DisplayName: displayName,
-		Model:       cfg.Model,
-		BaseURL:     providerCfg.BaseURL,
-		WireAPI:     wireAPI,
+		Slug:            slug,
+		DisplayName:     displayName,
+		Model:           cfg.Model,
+		BaseURL:         providerCfg.BaseURL,
+		WireAPI:         wireAPI,
+		ReasoningEffort: reasoningEffort,
 	}, nil
 }
