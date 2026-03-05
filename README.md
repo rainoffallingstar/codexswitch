@@ -36,6 +36,7 @@ The release tag is automatically set to the current UTC date (format: `YYYY-MM-D
 Release assets include:
 - `codexswitch-linux-amd64`
 - `codexswitch-macos-amd64`
+- `codexswitch-macos-arm64`
 - `codexswitch-windows-amd64.exe`
 - `SHA256SUMS`
 
