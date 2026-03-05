@@ -12,6 +12,7 @@
 - Configurable `reasoning-effort` (`none|minimal|low|medium|high|xhigh`, default `medium`)
 
 Provider files are stored in `~/.codexswitch/<slug>/`, and activation copies files to `~/.codex/`.
+Provider slug must match `[a-z0-9_-]` (1-64 chars, cannot start with `.`).
 
 ## Build
 

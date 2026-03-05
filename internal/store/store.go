@@ -37,6 +37,12 @@ func providerDir(base, slug string) string {
 
 // SaveProvider writes auth.json and config.toml for the provider.
 func SaveProvider(p types.Provider) error {
+	slug, err := types.NormalizeSlug(p.Slug)
+	if err != nil {
+		return err
+	}
+	p.Slug = slug
+
 	base, err := switchDir()
 	if err != nil {
 		return err
@@ -81,13 +87,24 @@ func LoadProviders() (types.ProviderList, error) {
 	}
 
 	current, _ := readCurrent(base)
+	if current != "" {
+		normalizedCurrent, err := types.NormalizeSlug(current)
+		if err == nil {
+			current = normalizedCurrent
+		} else {
+			current = ""
+		}
+	}
 
 	var providers []types.Provider
 	for _, e := range entries {
 		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") {
 			continue
 		}
-		slug := e.Name()
+		slug, slugErr := types.NormalizeSlug(e.Name())
+		if slugErr != nil {
+			continue
+		}
 		p, err := loadProvider(base, slug)
 		if err != nil {
 			continue // skip malformed directories
@@ -103,6 +120,12 @@ func LoadProviders() (types.ProviderList, error) {
 
 // loadProvider reads auth.json and config.toml from the provider directory.
 func loadProvider(base, slug string) (types.Provider, error) {
+	normalizedSlug, err := types.NormalizeSlug(slug)
+	if err != nil {
+		return types.Provider{}, err
+	}
+	slug = normalizedSlug
+
 	dir := providerDir(base, slug)
 
 	authData, err := os.ReadFile(filepath.Join(dir, "auth.json"))
@@ -139,6 +162,12 @@ func loadProvider(base, slug string) (types.Provider, error) {
 
 // Activate copies provider files to ~/.codex/ and records the current slug.
 func Activate(slug string) error {
+	normalizedSlug, err := types.NormalizeSlug(slug)
+	if err != nil {
+		return err
+	}
+	slug = normalizedSlug
+
 	base, err := switchDir()
 	if err != nil {
 		return err
@@ -173,20 +202,31 @@ func GetCurrentSlug() (string, error) {
 
 // FindProviderBySlug returns a configured provider by slug.
 func FindProviderBySlug(slug string) (types.Provider, error) {
+	normalizedSlug, err := types.NormalizeSlug(slug)
+	if err != nil {
+		return types.Provider{}, err
+	}
+
 	list, err := LoadProviders()
 	if err != nil {
 		return types.Provider{}, err
 	}
 	for _, p := range list.Providers {
-		if p.Slug == slug {
+		if p.Slug == normalizedSlug {
 			return p, nil
 		}
 	}
-	return types.Provider{}, fmt.Errorf("provider not found: %s", slug)
+	return types.Provider{}, fmt.Errorf("provider not found: %s", normalizedSlug)
 }
 
 // RemoveProvider deletes a provider directory from ~/.codexswitch.
 func RemoveProvider(slug string) error {
+	normalizedSlug, err := types.NormalizeSlug(slug)
+	if err != nil {
+		return err
+	}
+	slug = normalizedSlug
+
 	base, err := switchDir()
 	if err != nil {
 		return err

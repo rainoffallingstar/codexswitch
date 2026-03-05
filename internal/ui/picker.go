@@ -102,6 +102,12 @@ func PromptAddProvider(seed types.AddProviderInput, interactive bool) (types.Add
 	if input.WireAPI == "" {
 		input.WireAPI = "responses"
 	}
+	slug, err := types.NormalizeSlug(input.Slug)
+	if err != nil {
+		return types.AddProviderInput{}, err
+	}
+	input.Slug = slug
+
 	reasoningEffort, err := types.NormalizeReasoningEffort(input.ReasoningEffort)
 	if err != nil {
 		return types.AddProviderInput{}, err

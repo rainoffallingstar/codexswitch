@@ -65,12 +65,16 @@ func runEdit(_ *cobra.Command, _ []string) error {
 func resolveProviderTarget(list types.ProviderList, slug string, interactive bool, promptLabel string) (types.Provider, error) {
 	slug = strings.TrimSpace(slug)
 	if slug != "" {
+		normalizedSlug, err := types.NormalizeSlug(slug)
+		if err != nil {
+			return types.Provider{}, err
+		}
 		for _, p := range list.Providers {
-			if p.Slug == slug {
+			if p.Slug == normalizedSlug {
 				return p, nil
 			}
 		}
-		return types.Provider{}, fmt.Errorf("provider not found: %s", slug)
+		return types.Provider{}, fmt.Errorf("provider not found: %s", normalizedSlug)
 	}
 
 	if !interactive {

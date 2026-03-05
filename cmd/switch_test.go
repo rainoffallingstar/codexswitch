@@ -83,3 +83,19 @@ func TestResolveProviderTarget_NonInteractiveMissingSlug_ReturnsError(t *testing
 		t.Fatalf("resolveProviderTarget() error = %v, want missing --slug", err)
 	}
 }
+
+func TestResolveProviderTarget_InvalidSlug_ReturnsError(t *testing.T) {
+	list := types.ProviderList{
+		Providers: []types.Provider{
+			{Slug: "openai", DisplayName: "OpenAI"},
+		},
+	}
+
+	_, err := resolveProviderTarget(list, "../bad", false, "Select provider to switch")
+	if err == nil {
+		t.Fatalf("resolveProviderTarget() expected invalid slug error")
+	}
+	if !strings.Contains(err.Error(), "invalid provider slug") {
+		t.Fatalf("resolveProviderTarget() error = %v, want invalid provider slug", err)
+	}
+}
