@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -99,6 +101,7 @@ jobs:
           tag_name: ${{ needs.prepare-release.outputs.release_tag }}
           name: Release ${{ needs.prepare-release.outputs.release_tag }}
           target_commitish: ${{ github.sha }}
+          overwrite_files: true
           files: |
             release/codexswitch-linux-amd64
             release/codexswitch-macos-amd64
