@@ -7,6 +7,7 @@
 - Add provider configs (`add`)
 - Edit existing provider configs (`edit`)
 - Remove provider configs (`remove`)
+- Copy provider configs with auto suffix (`copy` / `replicate`)
 - List all configured providers (`list`)
 - Switch active provider from CLI (`switch --slug`) or interactive menu (default command)
 - Configurable `reasoning-effort` (`none|minimal|low|medium|high|xhigh`, default `medium`)
@@ -91,6 +92,15 @@ codexswitch remove --slug openai --yes
 
 The active provider cannot be removed directly.
 
+### Copy provider
+
+```bash
+codexswitch copy --slug openai
+codexswitch replicate --slug openai
+```
+
+Creates a new provider using `<slug>-copyN` and `<DisplayName> copyN` (for example `openai-copy1`) without switching the active provider.
+
 ## Development
 
 ```bash
@@ -105,4 +115,5 @@ codexswitch switch --help
 codexswitch add --help
 codexswitch edit --help
 codexswitch remove --help
+codexswitch copy --help
 ```

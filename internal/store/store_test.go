@@ -3,6 +3,7 @@ package store
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/rainoffallingstar/codexswitch/internal/types"
@@ -76,5 +77,72 @@ func TestActivateAndRemoveProvider_RejectInvalidSlug(t *testing.T) {
 	}
 	if err := RemoveProvider("../evil"); err == nil {
 		t.Fatalf("RemoveProvider() expected error for invalid slug")
+	}
+}
+
+func TestCopyProvider_CreatesIncrementedCloneAndKeepsCurrent(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	seed := types.Provider{
+		Slug:            "openai",
+		DisplayName:     "OpenAI",
+		APIKey:          "sk-test",
+		Model:           "gpt-5",
+		BaseURL:         "https://api.openai.com/v1",
+		WireAPI:         "responses",
+		ReasoningEffort: "high",
+	}
+	if err := SaveProvider(seed); err != nil {
+		t.Fatalf("SaveProvider(seed) error = %v", err)
+	}
+	if err := SaveProvider(types.Provider{
+		Slug:            "openai-copy1",
+		DisplayName:     "OpenAI copy1",
+		APIKey:          "sk-old",
+		Model:           "gpt-4.1-mini",
+		BaseURL:         "https://api.openai.com/v1",
+		WireAPI:         "responses",
+		ReasoningEffort: "medium",
+	}); err != nil {
+		t.Fatalf("SaveProvider(copy1) error = %v", err)
+	}
+	if err := Activate("openai"); err != nil {
+		t.Fatalf("Activate() error = %v", err)
+	}
+
+	cloned, err := CopyProvider("openai")
+	if err != nil {
+		t.Fatalf("CopyProvider() error = %v", err)
+	}
+	if cloned.Slug != "openai-copy2" {
+		t.Fatalf("cloned slug = %q, want %q", cloned.Slug, "openai-copy2")
+	}
+	if cloned.DisplayName != "OpenAI copy2" {
+		t.Fatalf("cloned display name = %q, want %q", cloned.DisplayName, "OpenAI copy2")
+	}
+	if cloned.APIKey != seed.APIKey || cloned.Model != seed.Model || cloned.BaseURL != seed.BaseURL || cloned.WireAPI != seed.WireAPI || cloned.ReasoningEffort != seed.ReasoningEffort {
+		t.Fatalf("cloned provider fields differ from source")
+	}
+
+	current, err := GetCurrentSlug()
+	if err != nil {
+		t.Fatalf("GetCurrentSlug() error = %v", err)
+	}
+	if current != "openai" {
+		t.Fatalf("current slug after copy = %q, want %q", current, "openai")
+	}
+}
+
+func TestCopyProvider_NotFound(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	_, err := CopyProvider("missing")
+	if err == nil {
+		t.Fatalf("CopyProvider() expected provider not found error")
+	}
+	if !strings.Contains(err.Error(), "provider not found: missing") {
+		t.Fatalf("CopyProvider() error = %v, want provider not found", err)
 	}
 }

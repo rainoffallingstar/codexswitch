@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/rainoffallingstar/codexswitch/internal/config"
@@ -217,6 +218,57 @@ func FindProviderBySlug(slug string) (types.Provider, error) {
 		}
 	}
 	return types.Provider{}, fmt.Errorf("provider not found: %s", normalizedSlug)
+}
+
+// CopyProvider clones an existing provider into <slug>-copyN.
+func CopyProvider(sourceSlug string) (types.Provider, error) {
+	normalizedSource, err := types.NormalizeSlug(sourceSlug)
+	if err != nil {
+		return types.Provider{}, err
+	}
+
+	list, err := LoadProviders()
+	if err != nil {
+		return types.Provider{}, err
+	}
+
+	var source types.Provider
+	found := false
+	maxCopy := 0
+	prefix := normalizedSource + "-copy"
+
+	for _, p := range list.Providers {
+		if p.Slug == normalizedSource {
+			source = p
+			found = true
+		}
+
+		if !strings.HasPrefix(p.Slug, prefix) {
+			continue
+		}
+		suffix := strings.TrimPrefix(p.Slug, prefix)
+		n, parseErr := strconv.Atoi(suffix)
+		if parseErr != nil || n < 1 {
+			continue
+		}
+		if n > maxCopy {
+			maxCopy = n
+		}
+	}
+
+	if !found {
+		return types.Provider{}, fmt.Errorf("provider not found: %s", normalizedSource)
+	}
+
+	copyN := maxCopy + 1
+	cloned := source
+	cloned.Slug = fmt.Sprintf("%s-copy%d", normalizedSource, copyN)
+	cloned.DisplayName = fmt.Sprintf("%s copy%d", source.DisplayName, copyN)
+
+	if err := SaveProvider(cloned); err != nil {
+		return types.Provider{}, err
+	}
+	return cloned, nil
 }
 
 // RemoveProvider deletes a provider directory from ~/.codexswitch.
